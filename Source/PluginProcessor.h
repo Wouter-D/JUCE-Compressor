@@ -13,16 +13,16 @@
 //==============================================================================
 /**
 */
-class NewProjectAudioProcessor  : public juce::AudioProcessor
-                            #if JucePlugin_Enable_ARA
-                             , public juce::AudioProcessorARAExtension
-                            #endif
+class MyGlueCompressor : public juce::AudioProcessor, public juce::AudioProcessorValueTreeState::Listener
+#if JucePlugin_Enable_ARA
+    , public juce::AudioProcessorARAExtension
+#endif
 {
 public:
     //==============================================================================
-    NewProjectAudioProcessor();
-    ~NewProjectAudioProcessor() override;
-
+    MyGlueCompressor();
+    ~MyGlueCompressor() override;
+  
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
@@ -56,7 +56,27 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    // Added stuff
+
+    using APVTS = juce::AudioProcessorValueTreeState;
+    APVTS treeState;
+    static APVTS::ParameterLayout createParameterLayout();
+    //APVTS apvts{ *this, nullptr, "Parameters", createParameterLayout() };
+
 private:
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
+
+    juce::dsp::Gain<float> inputModule;
+    juce::dsp::Gain<float> outputModule;
+
+    juce::dsp::Compressor <float> compressorModule; 
+    void updateParameters();
     //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NewProjectAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MyGlueCompressor)
+
+
+
 };
+
+
+// check https://www.youtube.com/watch?v=NOYk7O9EJjo for tutorial-
