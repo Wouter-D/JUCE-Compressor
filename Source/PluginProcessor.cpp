@@ -8,6 +8,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include <juce_dsp/juce_dsp.h>
 
 
 //==============================================================================
@@ -71,29 +72,56 @@ juce::AudioProcessorValueTreeState::ParameterLayout MyGlueCompressor::createPara
 
 void MyGlueCompressor::parameterChanged(const juce::String& parameterID, float newValue)
 {
-    //DBG("input: " << treeState.getRawParameterValue("input")->load());
-    //DBG("tresh: " << treeState.getRawParameterValue("thresh")->load());
-    //DBG("ratio: " << treeState.getRawParameterValue("ratio")->load());
-    //DBG("attack: " << treeState.getRawParameterValue("attack")->load());
-    //DBG("release: " << treeState.getRawParameterValue("release")->load());
-    //DBG("output: " << treeState.getRawParameterValue("output")->load());
+    DBG("input: " << treeState.getRawParameterValue("input")->load());
+    DBG("tresh: " << treeState.getRawParameterValue("thresh")->load());
+    DBG("ratio: " << treeState.getRawParameterValue("ratio")->load());
+    DBG("attack: " << treeState.getRawParameterValue("attack")->load());
+    DBG("release: " << treeState.getRawParameterValue("release")->load());
+    DBG("output: " << treeState.getRawParameterValue("output")->load());
 
     updateParameters();
+
+    //Checking why in and output wont immediatly change or update
+    inputModule.setGainDecibels(treeState.getRawParameterValue("input")->load());
+    outputModule.setGainDecibels(treeState.getRawParameterValue("output")->load());
 }
 
 void MyGlueCompressor::updateParameters()
 {
 
     //Update all DSP module parameters
+    inputModule.setGainLinear(treeState.getRawParameterValue("input")->load());
     inputModule.setGainDecibels(treeState.getRawParameterValue("input")->load());
-
     compressorModule.setThreshold(treeState.getRawParameterValue("thresh")->load());
     compressorModule.setRatio(treeState.getRawParameterValue("ratio")->load());
     compressorModule.setAttack(treeState.getRawParameterValue("attack")->load());
     compressorModule.setRelease(treeState.getRawParameterValue("release")->load());
-
     outputModule.setGainDecibels(treeState.getRawParameterValue("output")->load());
 
+}
+
+void MyGlueCompressor::applyDryWetMix(juce::AudioBuffer<float>& inputBuffer, juce::AudioBuffer<float>& outputBuffer, float wetLevel, float dryLevel)
+{
+    // Calculate the gain factors for wet and dry signals
+    float wetGain = juce::Decibels::decibelsToGain(wetLevel);
+    float dryGain = juce::Decibels::decibelsToGain(dryLevel);
+
+    // Debug output
+    std::cout << "Input channels: " << inputBuffer.getNumChannels() << std::endl;
+    std::cout << "Output channels: " << outputBuffer.getNumChannels() << std::endl;
+
+    // Apply the wet-dry mix to each sample in the buffers
+    for (int channel = 0; channel < outputBuffer.getNumChannels(); ++channel)
+    {
+        const float* inputChannelData = inputBuffer.getReadPointer(channel);
+        float* outputChannelData = outputBuffer.getWritePointer(channel);
+
+        for (int sample = 0; sample < outputBuffer.getNumSamples(); ++sample)
+        {
+            // Mix the wet and dry signals
+            outputChannelData[sample] = wetGain * outputChannelData[sample] + dryGain * inputChannelData[sample];
+        }
+    }
 }
 
 //==============================================================================
@@ -164,24 +192,28 @@ void MyGlueCompressor::prepareToPlay (double sampleRate, int samplesPerBlock)
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
 
-    juce::dsp::ProcessSpec spec;
-    spec.maximumBlockSize = samplesPerBlock;
+    //juce::dsp::ProcessSpec spec;
+ 
     spec.sampleRate = sampleRate;
-    spec.numChannels = getTotalNumOutputChannels(); //DSP module needs this
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.numChannels = static_cast<uint32_t>(getTotalNumOutputChannels()); //DSP module needs this
 
     inputModule.prepare(spec);
-    inputModule.setRampDurationSeconds(0.02);//Smooth change from parameter
-    outputModule.setRampDurationSeconds(0.02);//Smooth change from parameter
     outputModule.prepare(spec);
-
     compressorModule.prepare(spec);
-    updateParameters();
+    inputModule.setRampDurationSeconds(0.05);//Smooth change from parameter
+    outputModule.setRampDurationSeconds(0.05);//Smooth change from parameter
+    //updateParameters();
+
+    gainProcessor.prepare(spec);
 }
 
 void MyGlueCompressor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up anyFloat
     // spare memory, etc.
+
+    gainProcessor.reset();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -223,13 +255,40 @@ void MyGlueCompressor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
     // when they first compile a plugin, but obviously you don't need to keep
     // this code if your algorithm always overwrites all the output channels.
 
-    juce::dsp::AudioBlock<float> block{buffer};
-    inputModule.process(juce::dsp::ProcessContextReplacing<float>(block));
-    compressorModule.process(juce::dsp::ProcessContextReplacing<float>(block));
-    outputModule.process(juce::dsp::ProcessContextReplacing<float>(block));
+    //set the gain value
+    float gainValue = gainProcessor.getGainDecibels();//Change this value to actual parameter value
 
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+    //Changed the upper line with this as suggested by chatgpt
+    float inputGain = *treeState.getRawParameterValue("input");
+    gainProcessor.setGainDecibels(inputGain);
+
+    float outputGain = *treeState.getRawParameterValue("output");
+    outputModule.setGainDecibels(outputGain);
+
+    // Set the gain value for the gainProcessor.
+    gainProcessor.setGainLinear(inputGain);
+
+    // Create dsp::AudioBlock to wrap the input buffer
+    juce::dsp::AudioBlock<float>audioBlock{buffer};
+
+    //Apply the gain to each channel ion the audio buffer
+    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    {
+        juce::dsp::AudioBlock<float>channelBlock = audioBlock.getSingleChannelBlock(channel);
+        gainProcessor.process(juce::dsp::ProcessContextReplacing<float>(channelBlock));
+    }
+
+
+
+    inputModule.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    compressorModule.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    outputModule.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+
+    //Update forced?
+    updateParameters();
+
+    ///*for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+    //    buffer.clear (i, 0, buffer.getNumSamples());*/
 
     // This is the place where you'd normally do the guts of your plugin's
     // audio processing...
@@ -237,6 +296,7 @@ void MyGlueCompressor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
+
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         auto* channelData = buffer.getWritePointer (channel);
@@ -244,7 +304,24 @@ void MyGlueCompressor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
         // ..do something to the data...
     }
 
-    // Added
+    // Duplicate of the dry channel to mix drywet
+    juce::AudioBuffer<float> duplicatedInputBuffer(buffer.getNumChannels(), buffer.getNumSamples());
+
+    // Apply the wet-dry mix to the compressor output and duplicated input
+    applyDryWetMix(compressorOutputBuffer, duplicatedInputBuffer, wetLevel, dryLevel);
+
+    // Copy the wet signal to the output buffer
+    outputBuffer.copyFrom(0, 0, compressorOutputBuffer, 0, 0, buffer.getNumSamples());
+    
+    //applyDryWetMix(inputGain,outputBuffer,wetLevel,dryLevel );
+    // Mix the dry and wet signals and store in the output buffer
+    outputBuffer.addFrom(0, 0, duplicatedInputBuffer, 0, 0, buffer.getNumSamples());
+
+    //clear any unused output channel
+    for (int channel = totalNumInputChannels; channel < totalNumInputChannels; ++channel)
+    {
+        buffer.clear(channel, 0, buffer.getNumSamples());
+    }
 
 }
 

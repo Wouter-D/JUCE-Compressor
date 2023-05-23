@@ -64,13 +64,21 @@ public:
     //APVTS apvts{ *this, nullptr, "Parameters", createParameterLayout() };
 
 private:
+    void updateParameters();
+    void applyDryWetMix(juce::AudioBuffer<float>& inputBuffer, juce::AudioBuffer<float>& outputBuffer, float wetLevel, float dryLevel);
     void parameterChanged(const juce::String& parameterID, float newValue) override;
 
     juce::dsp::Gain<float> inputModule;
     juce::dsp::Gain<float> outputModule;
+    juce::dsp::Gain<float> gainProcessor;
 
     juce::dsp::Compressor <float> compressorModule; 
-    void updateParameters();
+    juce::AudioBuffer<float> compressorOutputBuffer;
+    juce::AudioBuffer<float> duplicatedInputBuffer;
+    float wetLevel;  // Wet level in decibels
+    float dryLevel;  // Dry level in decibels
+    juce::AudioBuffer<float> outputBuffer;  // Output buffer
+    juce::dsp::ProcessSpec spec;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MyGlueCompressor)
 
