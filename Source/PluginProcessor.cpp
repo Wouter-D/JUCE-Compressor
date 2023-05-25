@@ -10,7 +10,6 @@
 #include "PluginEditor.h"
 #include <juce_dsp/juce_dsp.h>
 
-
 //==============================================================================
 MyGlueCompressor::MyGlueCompressor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -25,18 +24,24 @@ MyGlueCompressor::MyGlueCompressor()
     , treeState(*this, nullptr, "Parameters",createParameterLayout())
 #endif
 {
+    treeState.addParameterListener("input", this);
     treeState.addParameterListener("thresh", this);
     treeState.addParameterListener("ratio", this);
     treeState.addParameterListener("attack", this);
     treeState.addParameterListener("release", this);
+    treeState.addParameterListener("output", this);
+    treeState.addParameterListener("Dry/Wet", this);
 }
 
 MyGlueCompressor::~MyGlueCompressor()
 {
+    treeState.removeParameterListener("input", this);
     treeState.removeParameterListener("thresh", this);
     treeState.removeParameterListener("ratio", this);
     treeState.removeParameterListener("attack", this);
     treeState.removeParameterListener("release", this);
+    treeState.removeParameterListener("output", this);
+    treeState.removeParameterListener("Dry/Wet", this);
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout MyGlueCompressor::createParameterLayout()
@@ -55,7 +60,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout MyGlueCompressor::createPara
     auto pAttack = std::make_unique<juce::AudioParameterFloat>("attack", "Attack", attackRange, 50.f);//CHANGE THIS Pointer member viar want b;lijft dit callen en memory leak
     auto pRelease = std::make_unique<juce::AudioParameterFloat>("release", "Release", releaseRange, 160.0f);//CHANGE THIS Pointer member viar want b;lijft dit callen en memory leak
     auto pOutput = std::make_unique<juce::AudioParameterFloat>("output", "Output", -60.f, 24.f, 0.f);//CHANGE THIS Pointer member viar want b;lijft dit callen en memory leak
-   
+    auto pWetDry = std::make_unique<juce::AudioParameterFloat>("Dry/Wet", "Dry/Wet", 0.f, 100.f, 0.f);//CHANGE THIS Pointer member viar want b;lijft dit callen en memory leak
+
     
     params.push_back(std::move(pInput));
     params.push_back(std::move(pThresh));
@@ -63,9 +69,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout MyGlueCompressor::createPara
     params.push_back(std::move(pAttack));
     params.push_back(std::move(pRelease));
     params.push_back(std::move(pOutput));
+    params.push_back(std::move(pWetDry));
 
     return { params.begin(), params.end() };
-
 }
 
 
@@ -78,6 +84,7 @@ void MyGlueCompressor::parameterChanged(const juce::String& parameterID, float n
     DBG("attack: " << treeState.getRawParameterValue("attack")->load());
     DBG("release: " << treeState.getRawParameterValue("release")->load());
     DBG("output: " << treeState.getRawParameterValue("output")->load());
+    DBG("Dry/Wet: " << treeState.getRawParameterValue("output")->load());
 
     updateParameters();
 
@@ -88,41 +95,41 @@ void MyGlueCompressor::parameterChanged(const juce::String& parameterID, float n
 
 void MyGlueCompressor::updateParameters()
 {
-
     //Update all DSP module parameters
-    inputModule.setGainLinear(treeState.getRawParameterValue("input")->load());
+    //inputModule.setGainLinear(treeState.getRawParameterValue("input")->load());
     inputModule.setGainDecibels(treeState.getRawParameterValue("input")->load());
     compressorModule.setThreshold(treeState.getRawParameterValue("thresh")->load());
     compressorModule.setRatio(treeState.getRawParameterValue("ratio")->load());
     compressorModule.setAttack(treeState.getRawParameterValue("attack")->load());
     compressorModule.setRelease(treeState.getRawParameterValue("release")->load());
     outputModule.setGainDecibels(treeState.getRawParameterValue("output")->load());
-
 }
 
-void MyGlueCompressor::applyDryWetMix(juce::AudioBuffer<float>& inputBuffer, juce::AudioBuffer<float>& outputBuffer, float wetLevel, float dryLevel)
+float MyGlueCompressor::applyCompression(float input)
 {
-    // Calculate the gain factors for wet and dry signals
-    float wetGain = juce::Decibels::decibelsToGain(wetLevel);
-    float dryGain = juce::Decibels::decibelsToGain(dryLevel);
+    // Define the compression parameters
+    const float threshold = 0.5f;   // Threshold above which compression is applied
+    const float ratio = 2.0f;       // Compression ratio
+    const float makeupGain = 2.0f;  // Makeup gain applied to the compressed signal
 
-    // Debug output
-    std::cout << "Input channels: " << inputBuffer.getNumChannels() << std::endl;
-    std::cout << "Output channels: " << outputBuffer.getNumChannels() << std::endl;
+    // Apply compression
+    float output = input;
 
-    // Apply the wet-dry mix to each sample in the buffers
-    for (int channel = 0; channel < outputBuffer.getNumChannels(); ++channel)
+    if (std::abs(input) > threshold)
     {
-        const float* inputChannelData = inputBuffer.getReadPointer(channel);
-        float* outputChannelData = outputBuffer.getWritePointer(channel);
+        // Apply compression if input exceeds the threshold
+        float gainReduction = (std::abs(input) - threshold) / ratio;
+        gainReduction = std::min(gainReduction, 1.0f); // Ensure gain reduction is limited to 1.0
 
-        for (int sample = 0; sample < outputBuffer.getNumSamples(); ++sample)
-        {
-            // Mix the wet and dry signals
-            outputChannelData[sample] = wetGain * outputChannelData[sample] + dryGain * inputChannelData[sample];
-        }
+        output = input - gainReduction;
     }
+
+    // Apply makeup gain to the compressed signal
+    output *= makeupGain;
+
+    return output;
 }
+
 
 //==============================================================================
 const juce::String MyGlueCompressor::getName() const
@@ -190,29 +197,25 @@ void MyGlueCompressor::changeProgramName (int index, const juce::String& newName
 void MyGlueCompressor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     // Use this method as the place to do any pre-playback
-    // initialisation that you need..
-
-    //juce::dsp::ProcessSpec spec;
- 
+    // initialisation that you need.. 
     spec.sampleRate = sampleRate;
     spec.maximumBlockSize = samplesPerBlock;
+    spec.sampleRate = sampleRate;
     spec.numChannels = static_cast<uint32_t>(getTotalNumOutputChannels()); //DSP module needs this
 
+    //Prepare DSP
     inputModule.prepare(spec);
-    outputModule.prepare(spec);
-    compressorModule.prepare(spec);
     inputModule.setRampDurationSeconds(0.05);//Smooth change from parameter
     outputModule.setRampDurationSeconds(0.05);//Smooth change from parameter
-    //updateParameters();
-
-    gainProcessor.prepare(spec);
+    compressorModule.prepare(spec);
+    outputModule.prepare(spec);
+    updateParameters();
 }
 
 void MyGlueCompressor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up anyFloat
     // spare memory, etc.
-
     gainProcessor.reset();
 }
 
@@ -255,74 +258,53 @@ void MyGlueCompressor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
     // when they first compile a plugin, but obviously you don't need to keep
     // this code if your algorithm always overwrites all the output channels.
 
-    //set the gain value
-    float gainValue = gainProcessor.getGainDecibels();//Change this value to actual parameter value
+    // Process DSP modules
+    juce::dsp::AudioBlock<float> block{ buffer };
+    inputModule.process(juce::dsp::ProcessContextReplacing<float>(block));
+    compressorModule.process(juce::dsp::ProcessContextReplacing<float>(block));
+    outputModule.process(juce::dsp::ProcessContextReplacing<float>(block));
+    
 
-    //Changed the upper line with this as suggested by chatgpt
-    float inputGain = *treeState.getRawParameterValue("input");
-    gainProcessor.setGainDecibels(inputGain);
+    // Check if the buffer is empty or has no channels
+    if (buffer.getNumChannels() == 0 || buffer.getNumSamples() == 0)
+        return;
 
-    float outputGain = *treeState.getRawParameterValue("output");
-    outputModule.setGainDecibels(outputGain);
+    // Ensure the buffer has at least one channel
+    const int numChannels = buffer.getNumChannels();
 
-    // Set the gain value for the gainProcessor.
-    gainProcessor.setGainLinear(inputGain);
-
-    // Create dsp::AudioBlock to wrap the input buffer
-    juce::dsp::AudioBlock<float>audioBlock{buffer};
-
-    //Apply the gain to each channel ion the audio buffer
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    for (int channel = 0; channel < numChannels; ++channel)
     {
-        juce::dsp::AudioBlock<float>channelBlock = audioBlock.getSingleChannelBlock(channel);
-        gainProcessor.process(juce::dsp::ProcessContextReplacing<float>(channelBlock));
+        // Check if the channel number is within the valid range
+        if (buffer.getArrayOfWritePointers()[channel] == nullptr)
+            continue;
+
+        float* channelData = buffer.getWritePointer(channel);
+
+        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+        {
+            // Duplicate the input dry channel
+            float drySignal = channelData[sample];
+
+            // Create the wet signal by applying compression or any other effect
+            float wetSignal = applyCompression(drySignal); // Replace with your compression function or effect processing
+
+            // Mix the wet and dry signals
+            channelData[sample] = wetGain * wetSignal + dryGain * drySignal;
+        }
     }
 
 
-
-    inputModule.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-    compressorModule.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-    outputModule.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-
-    //Update forced?
-    updateParameters();
-
-    ///*for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-    //    buffer.clear (i, 0, buffer.getNumSamples());*/
-
+    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+    {
+        buffer.clear(i, 0, buffer.getNumSamples());
+    }
+ 
     // This is the place where you'd normally do the guts of your plugin's
     // audio processing...
     // Make sure to reset the state if your inner loop is processing
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
-    }
-
-    // Duplicate of the dry channel to mix drywet
-    juce::AudioBuffer<float> duplicatedInputBuffer(buffer.getNumChannels(), buffer.getNumSamples());
-
-    // Apply the wet-dry mix to the compressor output and duplicated input
-    applyDryWetMix(compressorOutputBuffer, duplicatedInputBuffer, wetLevel, dryLevel);
-
-    // Copy the wet signal to the output buffer
-    outputBuffer.copyFrom(0, 0, compressorOutputBuffer, 0, 0, buffer.getNumSamples());
-    
-    //applyDryWetMix(inputGain,outputBuffer,wetLevel,dryLevel );
-    // Mix the dry and wet signals and store in the output buffer
-    outputBuffer.addFrom(0, 0, duplicatedInputBuffer, 0, 0, buffer.getNumSamples());
-
-    //clear any unused output channel
-    for (int channel = totalNumInputChannels; channel < totalNumInputChannels; ++channel)
-    {
-        buffer.clear(channel, 0, buffer.getNumSamples());
-    }
-
 }
 
 
@@ -365,7 +347,6 @@ void MyGlueCompressor::setStateInformation (const void* data, int sizeInBytes)
 
     }
 }
-
 
 //==============================================================================
 // This creates new instances of the plugin..

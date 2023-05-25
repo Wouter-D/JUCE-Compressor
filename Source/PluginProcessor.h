@@ -65,20 +65,21 @@ public:
 
 private:
     void updateParameters();
-    void applyDryWetMix(juce::AudioBuffer<float>& inputBuffer, juce::AudioBuffer<float>& outputBuffer, float wetLevel, float dryLevel);
+    float applyCompression(float input);
     void parameterChanged(const juce::String& parameterID, float newValue) override;
 
     juce::dsp::Gain<float> inputModule;
     juce::dsp::Gain<float> outputModule;
     juce::dsp::Gain<float> gainProcessor;
-
     juce::dsp::Compressor <float> compressorModule; 
-    juce::AudioBuffer<float> compressorOutputBuffer;
-    juce::AudioBuffer<float> duplicatedInputBuffer;
+    juce::AudioBuffer<float> outputBuffer;  // Output buffer
     float wetLevel;  // Wet level in decibels
     float dryLevel;  // Dry level in decibels
-    juce::AudioBuffer<float> outputBuffer;  // Output buffer
     juce::dsp::ProcessSpec spec;
+
+    float wetGain = 0.5f;
+    float dryGain = 0.5f;
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MyGlueCompressor)
 
