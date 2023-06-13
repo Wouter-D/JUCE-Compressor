@@ -59,7 +59,7 @@ public:
     // Added stuff
 
     using APVTS = juce::AudioProcessorValueTreeState;
-    APVTS treeState;
+    APVTS m_treeState;
     static APVTS::ParameterLayout createParameterLayout();
     //APVTS apvts{ *this, nullptr, "Parameters", createParameterLayout() };
 
@@ -67,19 +67,19 @@ private:
     void updateParameters();
     float applyCompression(float input);
     void parameterChanged(const juce::String& parameterID, float newValue) override;
+    juce::dsp::Gain<float> m_inputModule;
+    juce::dsp::Gain<float> m_outputModule;
+    juce::dsp::Gain<float> m_gainProcessor;
+    juce::dsp::ProcessSpec m_spec;
+    juce::dsp::Compressor <float> m_compressorModule; 
+    juce::AudioBuffer<float> m_outputBuffer;  // Output buffer
+    juce::SmoothedValue<float> m_inputSoftClipping;
+    float m_wetLevel;  // Wet level in decibels
+    float m_dryLevel;  // Dry level in decibels
 
-    juce::dsp::Gain<float> inputModule;
-    juce::dsp::Gain<float> outputModule;
-    juce::dsp::Gain<float> gainProcessor;
-    juce::dsp::Compressor <float> compressorModule; 
-    juce::AudioBuffer<float> outputBuffer;  // Output buffer
-    float wetLevel;  // Wet level in decibels
-    float dryLevel;  // Dry level in decibels
-    juce::dsp::ProcessSpec spec;
-
-    float wetGain = 0.5f;
-    float dryGain = 0.5f;
-
+    float m_wetGain = 0.5f;
+    float m_dryGain = 0.5f;
+    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MyGlueCompressor)
 

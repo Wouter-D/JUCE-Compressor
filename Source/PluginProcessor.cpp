@@ -21,27 +21,27 @@ MyGlueCompressor::MyGlueCompressor()
         .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
     )
-    , treeState(*this, nullptr, "Parameters",createParameterLayout())
+    , m_treeState(*this, nullptr, "Parameters",createParameterLayout())
 #endif
 {
-    treeState.addParameterListener("input", this);
-    treeState.addParameterListener("thresh", this);
-    treeState.addParameterListener("ratio", this);
-    treeState.addParameterListener("attack", this);
-    treeState.addParameterListener("release", this);
-    treeState.addParameterListener("output", this);
-    treeState.addParameterListener("Dry/Wet", this);
+    m_treeState.addParameterListener("input", this);
+    m_treeState.addParameterListener("thresh", this);
+    m_treeState.addParameterListener("ratio", this);
+    m_treeState.addParameterListener("attack", this);
+    m_treeState.addParameterListener("release", this);
+    m_treeState.addParameterListener("output", this);
+    m_treeState.addParameterListener("Dry/Wet", this);
 }
 
 MyGlueCompressor::~MyGlueCompressor()
 {
-    treeState.removeParameterListener("input", this);
-    treeState.removeParameterListener("thresh", this);
-    treeState.removeParameterListener("ratio", this);
-    treeState.removeParameterListener("attack", this);
-    treeState.removeParameterListener("release", this);
-    treeState.removeParameterListener("output", this);
-    treeState.removeParameterListener("Dry/Wet", this);
+    m_treeState.removeParameterListener("input", this);
+    m_treeState.removeParameterListener("thresh", this);
+    m_treeState.removeParameterListener("ratio", this);
+    m_treeState.removeParameterListener("attack", this);
+    m_treeState.removeParameterListener("release", this);
+    m_treeState.removeParameterListener("output", this);
+    m_treeState.removeParameterListener("Dry/Wet", this);
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout MyGlueCompressor::createParameterLayout()
@@ -54,13 +54,16 @@ juce::AudioProcessorValueTreeState::ParameterLayout MyGlueCompressor::createPara
     juce::NormalisableRange<float> releaseRange = juce::NormalisableRange<float>(5.0f, 5000.0f, 1.f);
     releaseRange.setSkewForCentre(160.f);
 
-    auto pInput = std::make_unique<juce::AudioParameterFloat>("input", "Input", -60.f, 24.f, 0.f);//CHANGE THIS Pointer member viar want b;lijft dit callen en memory leak
-    auto pThresh = std::make_unique<juce::AudioParameterFloat>("thresh", "Thresh", -60.f, 10.f, 0.f);//CHANGE THIS Pointer member viar want b;lijft dit callen en memory leak
-    auto pRatio = std::make_unique<juce::AudioParameterFloat>("ratio", "Ratio", 1.f, 20.f, 1.f);//CHANGE THIS Pointer member viar want b;lijft dit callen en memory leak
-    auto pAttack = std::make_unique<juce::AudioParameterFloat>("attack", "Attack", attackRange, 50.f);//CHANGE THIS Pointer member viar want b;lijft dit callen en memory leak
-    auto pRelease = std::make_unique<juce::AudioParameterFloat>("release", "Release", releaseRange, 160.0f);//CHANGE THIS Pointer member viar want b;lijft dit callen en memory leak
-    auto pOutput = std::make_unique<juce::AudioParameterFloat>("output", "Output", -60.f, 24.f, 0.f);//CHANGE THIS Pointer member viar want b;lijft dit callen en memory leak
-    auto pWetDry = std::make_unique<juce::AudioParameterFloat>("Dry/Wet", "Dry/Wet", 0.f, 100.f, 0.f);//CHANGE THIS Pointer member viar want b;lijft dit callen en memory leak
+    //juce::NormalisableRange<float> wetDryMixRange = juce::NormalisableRange<float>(5.0f, 5000.0f, 1.f);
+    //wetDryMixRange.setSkewForCentre(160.f);
+
+    auto pInput = std::make_unique<juce::AudioParameterFloat>("input", "Input", -60.f, 24.f, 0.f);
+    auto pThresh = std::make_unique<juce::AudioParameterFloat>("thresh", "Thresh", -60.f, 10.f, 0.f);
+    auto pRatio = std::make_unique<juce::AudioParameterFloat>("ratio", "Ratio", 1.f, 20.f, 1.f);
+    auto pAttack = std::make_unique<juce::AudioParameterFloat>("attack", "Attack", attackRange, 50.f);
+    auto pRelease = std::make_unique<juce::AudioParameterFloat>("release", "Release", releaseRange, 160.0f);
+    auto pOutput = std::make_unique<juce::AudioParameterFloat>("output", "Output", -60.f, 24.f, 0.f);
+    auto pWetDry = std::make_unique<juce::AudioParameterFloat>("Dry/Wet", "Dry/Wet", 0.f, 10.f, 0.f);
 
     
     params.push_back(std::move(pInput));
@@ -78,31 +81,34 @@ juce::AudioProcessorValueTreeState::ParameterLayout MyGlueCompressor::createPara
 
 void MyGlueCompressor::parameterChanged(const juce::String& parameterID, float newValue)
 {
-    DBG("input: " << treeState.getRawParameterValue("input")->load());
-    DBG("tresh: " << treeState.getRawParameterValue("thresh")->load());
-    DBG("ratio: " << treeState.getRawParameterValue("ratio")->load());
-    DBG("attack: " << treeState.getRawParameterValue("attack")->load());
-    DBG("release: " << treeState.getRawParameterValue("release")->load());
-    DBG("output: " << treeState.getRawParameterValue("output")->load());
-    DBG("Dry/Wet: " << treeState.getRawParameterValue("output")->load());
+    DBG("input: " << m_treeState.getRawParameterValue("input")->load());
+    DBG("tresh: " << m_treeState.getRawParameterValue("thresh")->load());
+    DBG("ratio: " << m_treeState.getRawParameterValue("ratio")->load());
+    DBG("attack: " << m_treeState.getRawParameterValue("attack")->load());
+    DBG("release: " << m_treeState.getRawParameterValue("release")->load());
+    DBG("output: " << m_treeState.getRawParameterValue("output")->load());
+    DBG("Dry/Wet: " << m_treeState.getRawParameterValue("Dry/Wet")->load());
 
     updateParameters();
 
     //Checking why in and output wont immediatly change or update
-    inputModule.setGainDecibels(treeState.getRawParameterValue("input")->load());
-    outputModule.setGainDecibels(treeState.getRawParameterValue("output")->load());
+    m_inputModule.setGainDecibels(m_treeState.getRawParameterValue("input")->load());
+    m_outputModule.setGainDecibels(m_treeState.getRawParameterValue("output")->load());
 }
+
+
 
 void MyGlueCompressor::updateParameters()
 {
     //Update all DSP module parameters
     //inputModule.setGainLinear(treeState.getRawParameterValue("input")->load());
-    inputModule.setGainDecibels(treeState.getRawParameterValue("input")->load());
-    compressorModule.setThreshold(treeState.getRawParameterValue("thresh")->load());
-    compressorModule.setRatio(treeState.getRawParameterValue("ratio")->load());
-    compressorModule.setAttack(treeState.getRawParameterValue("attack")->load());
-    compressorModule.setRelease(treeState.getRawParameterValue("release")->load());
-    outputModule.setGainDecibels(treeState.getRawParameterValue("output")->load());
+    m_inputModule.setGainDecibels(m_treeState.getRawParameterValue("input")->load());
+    m_compressorModule.setThreshold(m_treeState.getRawParameterValue("thresh")->load());
+    m_compressorModule.setRatio(m_treeState.getRawParameterValue("ratio")->load());
+    m_compressorModule.setAttack(m_treeState.getRawParameterValue("attack")->load());
+    m_compressorModule.setRelease(m_treeState.getRawParameterValue("release")->load());
+    m_outputModule.setGainDecibels(m_treeState.getRawParameterValue("output")->load());
+
 }
 
 float MyGlueCompressor::applyCompression(float input)
@@ -198,17 +204,17 @@ void MyGlueCompressor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need.. 
-    spec.sampleRate = sampleRate;
-    spec.maximumBlockSize = samplesPerBlock;
-    spec.sampleRate = sampleRate;
-    spec.numChannels = static_cast<uint32_t>(getTotalNumOutputChannels()); //DSP module needs this
+    m_spec.sampleRate = sampleRate;
+    m_spec.maximumBlockSize = samplesPerBlock;
+    m_spec.sampleRate = sampleRate;
+    m_spec.numChannels = static_cast<uint32_t>(getTotalNumOutputChannels()); //DSP module needs this
 
     //Prepare DSP
-    inputModule.prepare(spec);
-    inputModule.setRampDurationSeconds(0.05);//Smooth change from parameter
-    outputModule.setRampDurationSeconds(0.05);//Smooth change from parameter
-    compressorModule.prepare(spec);
-    outputModule.prepare(spec);
+    m_inputModule.prepare(m_spec);
+    m_inputModule.setRampDurationSeconds(0.05);//Smooth change from parameter
+    m_outputModule.setRampDurationSeconds(0.05);//Smooth change from parameter
+    m_compressorModule.prepare(m_spec);
+    m_outputModule.prepare(m_spec);
     updateParameters();
 }
 
@@ -216,7 +222,7 @@ void MyGlueCompressor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up anyFloat
     // spare memory, etc.
-    gainProcessor.reset();
+    m_gainProcessor.reset();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -260,10 +266,10 @@ void MyGlueCompressor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
 
     // Process DSP modules
     juce::dsp::AudioBlock<float> block{ buffer };
-    inputModule.process(juce::dsp::ProcessContextReplacing<float>(block));
-    compressorModule.process(juce::dsp::ProcessContextReplacing<float>(block));
-    outputModule.process(juce::dsp::ProcessContextReplacing<float>(block));
-    
+    m_inputModule.process(juce::dsp::ProcessContextReplacing<float>(block));
+    m_compressorModule.process(juce::dsp::ProcessContextReplacing<float>(block));
+    m_outputModule.process(juce::dsp::ProcessContextReplacing<float>(block));
+    float wetDryMix = m_treeState.getRawParameterValue("Dry/Wet")->load();
 
     // Check if the buffer is empty or has no channels
     if (buffer.getNumChannels() == 0 || buffer.getNumSamples() == 0)
@@ -288,10 +294,14 @@ void MyGlueCompressor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
             // Create the wet signal by applying compression or any other effect
             float wetSignal = applyCompression(drySignal); // Replace with your compression function or effect processing
 
+            juce::dsp::Limiter<float> limit;
+
+
             // Mix the wet and dry signals
-            channelData[sample] = wetGain * wetSignal + dryGain * drySignal;
+            channelData[sample] = m_wetGain * wetSignal * wetDryMix + m_dryGain * drySignal * (1 - wetDryMix);
         }
     }
+
 
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
@@ -330,7 +340,7 @@ void MyGlueCompressor::getStateInformation (juce::MemoryBlock& destData)
 
     ////Save params
     juce::MemoryOutputStream stream(destData, false);
-    treeState.state.writeToStream(stream);
+    m_treeState.state.writeToStream(stream);
 }
 
 void MyGlueCompressor::setStateInformation (const void* data, int sizeInBytes)
@@ -343,7 +353,7 @@ void MyGlueCompressor::setStateInformation (const void* data, int sizeInBytes)
 
     if (tree.isValid())
     {
-       treeState.state = tree;
+        m_treeState.state = tree;
 
     }
 }
