@@ -12,16 +12,27 @@
 
 //==============================================================================
 MyGlueCompressor::MyGlueCompressor()
-#ifndef JucePlugin_PreferredChannelConfigurations
     : AudioProcessor(BusesProperties()
+
+
+#ifndef JucePlugin_PreferredChannelConfigurations
+    
 #if ! JucePlugin_IsMidiEffect
 #if ! JucePlugin_IsSynth
         .withInput("Input", juce::AudioChannelSet::stereo(), true)
 #endif
         .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
-    )
-    , m_treeState(*this, nullptr, "Parameters",createParameterLayout())
+    ),
+    m_treeState(*this, nullptr, "Parameters",createParameterLayout()),
+    m_attackTime(10.f),
+    m_releaseTime(100.f),
+    m_ratio(4.f),
+    m_threshold(-20.f),
+    m_makeupGain(0.0f),
+    m_range(20.f),
+    m_dryWet(1.f),
+    m_softClippingEnabled(false)
 #endif
 {
     m_treeState.addParameterListener("input", this);
@@ -290,55 +301,57 @@ void MyGlueCompressor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
 
     // Process DSP modules
     juce::dsp::AudioBlock<float> block{ buffer };
+
     m_inputModule.process(juce::dsp::ProcessContextReplacing<float>(block));
     m_compressorModule.process(juce::dsp::ProcessContextReplacing<float>(block));
     m_outputModule.process(juce::dsp::ProcessContextReplacing<float>(block));
-    float wetDryMix = m_treeState.getRawParameterValue("Dry/Wet")->load();
+    
+    //float wetDryMix = m_treeState.getRawParameterValue("Dry/Wet")->load();
 
-    // Check if the buffer is empty or has no channels
-    if (buffer.getNumChannels() == 0 || buffer.getNumSamples() == 0)
-        return;
+    //// Check if the buffer is empty or has no channels
+    //if (buffer.getNumChannels() == 0 || buffer.getNumSamples() == 0)
+    //    return;
 
-    // Ensure the buffer has at least one channel
-    const int numChannels = buffer.getNumChannels();
+    //// Ensure the buffer has at least one channel
+    //const int numChannels = buffer.getNumChannels();
 
-    for (int channel = 0; channel < numChannels; ++channel)
-    {
-        // Check if the channel number is within the valid range
-        if (buffer.getArrayOfWritePointers()[channel] == nullptr)
-            continue;
+    //for (int channel = 0; channel < numChannels; ++channel)
+    //{
+    //    // Check if the channel number is within the valid range
+    //    if (buffer.getArrayOfWritePointers()[channel] == nullptr)
+    //        continue;
 
-        float* channelData = buffer.getWritePointer(channel);
+    //    float* channelData = buffer.getWritePointer(channel);
 
-        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
-        {
-            // Duplicate the input dry channel
-            float drySignal = channelData[sample];
+    //    for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+    //    {
+    //        // Duplicate the input dry channel
+    //        float drySignal = channelData[sample];
 
-            // Create the wet signal by applying compression or any other effect
-            float wetSignal = applyCompression(drySignal); // Replace with your compression function or effect processing
+    //        // Create the wet signal by applying compression or any other effect
+    //        float wetSignal = applyCompression(drySignal); // Replace with your compression function or effect processing
 
-            juce::dsp::Limiter<float> limit;
-
-
-            // Mix the wet and dry signals
-            channelData[sample] = m_wetGain * wetSignal * wetDryMix + m_dryGain * drySignal * (1 - wetDryMix);
-        }
-    }
+    //        juce::dsp::Limiter<float> limit;
 
 
+    //        // Mix the wet and dry signals
+    //        channelData[sample] = m_wetGain * wetSignal * wetDryMix + m_dryGain * drySignal * (1 - wetDryMix);
+    //    }
+    //}
 
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-    {
-        buffer.clear(i, 0, buffer.getNumSamples());
-    }
+
+
+    //for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+    //{
+    //    buffer.clear(i, 0, buffer.getNumSamples());
+    //}
  
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
+    //// This is the place where you'd normally do the guts of your plugin's
+    //// audio processing...
+    //// Make sure to reset the state if your inner loop is processing
+    //// the samples and the outer loop is handling the channels.
+    //// Alternatively, you can process the samples with the channels
+    //// interleaved by keeping the same state.
 
 }
 
@@ -363,7 +376,7 @@ void MyGlueCompressor::getStateInformation (juce::MemoryBlock& destData)
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
 
-    ////Save params
+    //Save params to memory stream
     juce::MemoryOutputStream stream(destData, false);
     m_treeState.state.writeToStream(stream);
 }
@@ -373,7 +386,7 @@ void MyGlueCompressor::setStateInformation (const void* data, int sizeInBytes)
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
 
-    ////Recall params
+    //Recall params from memory stream
     auto tree = juce::ValueTree::readFromData(data, size_t(sizeInBytes));
 
     if (tree.isValid())

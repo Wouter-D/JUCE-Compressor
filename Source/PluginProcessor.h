@@ -107,20 +107,20 @@ private:
     juce::dsp::Gain<float> m_inputModule;
     juce::dsp::Gain<float> m_outputModule;
     juce::dsp::Gain<float> m_gainProcessor;
-    juce::dsp::ProcessSpec m_spec;
     juce::dsp::Compressor <float> m_compressorModule; 
+    juce::dsp::ProcessSpec m_spec;
     juce::AudioBuffer<float> m_outputBuffer;  // Output buffer
     juce::SmoothedValue<float> m_inputSoftClipping;
 
     //Parameters
-    float m_attackTime{0.0f};
-    float m_releaseTime{ 0.0f };
-    float m_ratio{ 0.0f };
-    float m_Threshold{ 0.0f };
-    float m_makeupGain{ 0.0f };
-    float m_range{ 0.0f };
-    float m_dryWet{ 0.0f };
-    bool m_softClippingEnabled{false};
+    float m_attackTime;
+    float m_releaseTime;
+    float m_ratio;
+    float m_threshold;
+    float m_makeupGain;
+    float m_range;
+    float m_dryWet;
+    bool m_softClippingEnabled;
 
     EnvelopeFollower m_envelopeFollower;
 

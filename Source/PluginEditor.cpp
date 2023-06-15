@@ -15,10 +15,12 @@ MyCompressorEditor::MyCompressorEditor(MyGlueCompressor& p)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize(400, 300);
+    setSize(750,480);
+    
+    
 
-    m_attackSlider.setRange(1.0, 100.0);
-    m_attackSlider.addListener(this);
+       /* m_attackSlider.setRange(1.0, 100.0);
+        m_attackSlider.addListener(this);
 
         m_releaseSlider.setRange(10.0, 1000.0);
         m_releaseSlider.addListener(this);
@@ -39,7 +41,7 @@ MyCompressorEditor::MyCompressorEditor(MyGlueCompressor& p)
         m_wetDrySlider.addListener(this);
 
         m_softClippingToggle.setButtonText("Soft Clipping");
-        m_softClippingToggle.addListener(this);
+        m_softClippingToggle.addListener(this);*/
 
         //Layout Logic goes here
 
@@ -67,12 +69,14 @@ void MyCompressorEditor::buttonClicked(juce::Button* button)
 void MyCompressorEditor::paint(juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
+    g.setGradientFill(
+        juce::ColourGradient::vertical(juce::Colour::fromRGB(202, 222, 220).darker(0.05f)
+        ,getHeight()
+        ,juce::Colour::fromRGB(202, 222, 220).brighter(0.02f), getHeight() * 0.4));
 
-    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
-
-    g.setColour(juce::Colours::white);
-    g.setFont(15.0f);
-    g.drawFittedText("Hello World!", getLocalBounds(), juce::Justification::centred, 1);
+    //g.fillEllipse(0.f,0.f,740.f,480.f);
+    //g.fillRect(getLocalBounds());
+    g.fillRoundedRectangle(0.f,0.f, 750.f,480.f,50.f);
 }
 
 void MyCompressorEditor::resized()
