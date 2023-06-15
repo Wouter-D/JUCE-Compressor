@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 
+
 //==============================================================================
 /**
 */
@@ -79,6 +80,7 @@ private:
 
     float m_wetGain = 0.5f;
     float m_dryGain = 0.5f;
+
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MyGlueCompressor)

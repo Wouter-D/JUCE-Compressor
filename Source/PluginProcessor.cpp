@@ -328,7 +328,8 @@ bool MyGlueCompressor::hasEditor() const
 juce::AudioProcessorEditor* MyGlueCompressor::createEditor()
 {
     //return new juce::GenericAudioProcessorEditor(*this);
-    return new juce::AudioProcessorEditor(*this);
+
+    return new MyCompressorEditor(*this);
 }
 
 //==============================================================================
