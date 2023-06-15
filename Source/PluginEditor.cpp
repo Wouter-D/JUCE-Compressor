@@ -12,23 +12,95 @@
 //==============================================================================
 MyCompressorEditor::MyCompressorEditor(MyGlueCompressor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
+    ,m_lnf()
+    ,inputDialLabel("Input","Input")
+    ,threshDialLabel("Threshold", "Threshold")
+    ,ratioDialLabel("Ratio", "Ratio")
+    ,attackDialLabel("Attack", "Attack")
+    ,releaseDialLabel("Release", "Release")
+    ,outputDialLabel("Output", "Output")
+    ,rangeDialLabel("Range", "Range")
+    ,wetDryDialLabel("WetDry", "WetDry")
+    ,m_inputDial()
+    ,m_attackDial()
+    ,m_releaseDial()
+    ,m_ratioDial()
+    ,m_thresholdDial()
+    ,m_makeupGainDial()
+    ,m_rangeDial()
+    ,m_outputDial()
+    ,m_wetDryDial()
 {
-    //Go tru each slider and call dial properties
+
+    // Set up the soft clipping toggle button
+    m_softClippingToggle.setButtonText("Soft Clipping");
+    m_softClippingToggle.addListener(this);
+    addAndMakeVisible(m_softClippingToggle);
+
+    // Go through each slider and set dial properties
     for (size_t index = 0; index < m_dials.size(); index++)
     {
         setCommonSliderProperties(*m_dials[index]);
+        addAndMakeVisible(m_dials[index]);
+        m_dials[index]->addListener(this);
     }
 
-    // Make sure that before the constructor has finished, you've set the
-    // editor's size to whatever you need it to be.
-    setSize(750,480);
+    // Set the labels for each dial
+    for (size_t index = 0; index < dialLabels.size(); index++)
+    {
+        dialLabels[index]->attachToComponent(m_dials[index], true);
+        dialLabels[index]->setFont(juce::Font(10.0f, juce::Font::plain));
+        dialLabels[index]->setJustificationType(juce::Justification::centred);
+        addAndMakeVisible(dialLabels[index]);
+    }
+
+    // Set the range and skew factors for each dial
+    m_inputDial.setRange(0.0, 1.0);
+    m_inputDial.setSkewFactorFromMidPoint(0.3);
+
+    m_attackDial.setRange(1.0, 1000.0);
+    m_attackDial.setSkewFactorFromMidPoint(100.0);
+    m_attackDial.setValue(10.0);
+
+    m_releaseDial.setRange(10.0, 10000.0);
+    m_releaseDial.setSkewFactorFromMidPoint(1000.0);
+    m_releaseDial.setValue(100.0);
+
+    m_ratioDial.setRange(1.0, 20.0);
+    m_ratioDial.setSkewFactorFromMidPoint(2.0);
+    m_ratioDial.setValue(4.0);
+
+    m_thresholdDial.setRange(-60.0, 0.0);
+    m_thresholdDial.setSkewFactorFromMidPoint(-20.0);
+    m_thresholdDial.setValue(-20.0);
+
+    m_makeupGainDial.setRange(0.0, 24.0);
+    m_makeupGainDial.setSkewFactorFromMidPoint(6.0);
+    m_makeupGainDial.setValue(0.0);
+
+    m_rangeDial.setRange(0.0, 60.0);
+    m_rangeDial.setSkewFactorFromMidPoint(30.0);
+    m_rangeDial.setValue(30.0);
+
+    m_outputDial.setRange(-24.0, 24.0);
+    m_outputDial.setSkewFactorFromMidPoint(0.0);
+    m_outputDial.setValue(0.0);
+
+    m_wetDryDial.setRange(0.0, 1.0);
+    m_wetDryDial.setSkewFactorFromMidPoint(0.5);
+    m_wetDryDial.setValue(0.5);
+
+    setSize(400, 300);
+
 }
 
 MyCompressorEditor::~MyCompressorEditor()
 {
     m_dials.clear();
+    dialLabels.clear();
     //Shrinks to only the needed elements in the vector
     m_dials.shrink_to_fit();
+    dialLabels.shrink_to_fit();
 }
 
 void MyCompressorEditor::sliderValueChanged(juce::Slider* slider)
@@ -38,21 +110,23 @@ void MyCompressorEditor::sliderValueChanged(juce::Slider* slider)
 
 void MyCompressorEditor::buttonClicked(juce::Button* button)
 {
-
+    if (button == &m_softClippingToggle)
+    {
+    }
 }
 
 //==============================================================================
 void MyCompressorEditor::paint(juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
-    //g.setGradientFill(
-    //    juce::ColourGradient::vertical(juce::Colour::fromRGB(202, 222, 220).darker(0.05f)
-    //    ,getHeight()
-    //    ,juce::Colour::fromRGB(202, 222, 220).brighter(0.02f), getHeight() * 0.4));
+    g.setGradientFill(
+        juce::ColourGradient::vertical(juce::Colour::fromRGB(202, 222, 220).darker(0.05f)
+        ,getHeight()
+        ,juce::Colour::fromRGB(202, 222, 220).brighter(0.02f), getHeight() * 0.4));
 
     ////g.fillEllipse(0.f,0.f,740.f,480.f);
     ////g.fillRect(getLocalBounds());
-    //g.fillRoundedRectangle(0.f,0.f, 750.f,480.f,50.f);
+    ////g.fillRoundedRectangle(0.f,0.f, 750.f,480.f,50.f);
 }
 
 //void MyCompressorEditor::resized()
@@ -92,80 +166,46 @@ void MyCompressorEditor::paint(juce::Graphics& g)
 
 void MyCompressorEditor::resized()
 {
-    const int dialSize = getWidth() * 0.3;
+// Arrange components within the editor window
+const int toggleButtonWidth = 100;
+const int toggleButtonHeight = 30;
+const int dialWidth = 60;
+const int dialHeight = 60;
+const int dialLabelHeight = 20;
 
-    // Left region - Attack, Release, Ratio
-    juce::FlexBox flexboxLeft;
-    flexboxLeft.flexDirection = juce::FlexBox::Direction::column;
-    flexboxLeft.justifyContent = juce::FlexBox::JustifyContent::flexStart;
-    flexboxLeft.alignItems = juce::FlexBox::AlignItems::flexStart;
+const int margin = 10;
+const int padding = 5;
 
-    juce::FlexItem attackItem(m_attackDial);
-    attackItem.withFlex(1.0f).withMargin(juce::FlexItem::Margin(0, 10, 10, 10));
-    flexboxLeft.items.add(attackItem);
+int x = margin;
+int y = margin;
 
-    juce::FlexItem releaseItem(m_releaseDial);
-    releaseItem.withFlex(1.0f).withMargin(juce::FlexItem::Margin(0, 10, 10, 10));
-    flexboxLeft.items.add(releaseItem);
+m_softClippingToggle.setBounds(x, y, toggleButtonWidth, toggleButtonHeight);
+y += toggleButtonHeight + padding;
 
-    juce::FlexItem ratioItem(m_ratioDial);
-    ratioItem.withFlex(1.0f).withMargin(juce::FlexItem::Margin(0, 10, 10, 10));
-    flexboxLeft.items.add(ratioItem);
+int rowHeight = std::max(dialHeight, dialLabelHeight) + padding;
 
-    flexboxLeft.performLayout(getLocalBounds());
+for (size_t index = 0; index < m_dials.size(); index++)
+{
+    m_dials[index]->setBounds(x, y, dialWidth, dialHeight);
+    y += dialHeight + padding;
 
-    // Middle region - Threshold and Makeup
-    const int middleRegionWidth = getWidth() / 2 - dialSize / 2;
+    dialLabels[index]->setBounds(x, y, dialWidth, dialLabelHeight);
+    y += dialLabelHeight + padding;
 
-    juce::FlexBox flexboxMiddle;
-    flexboxMiddle.flexDirection = juce::FlexBox::Direction::row;
-    flexboxMiddle.justifyContent = juce::FlexBox::JustifyContent::center;
-    flexboxMiddle.alignItems = juce::FlexBox::AlignItems::center;
-
-    juce::FlexItem thresholdItem(m_thresholdDial);
-    thresholdItem.withFlex(1.0f).withMargin(juce::FlexItem::Margin(10));
-    flexboxMiddle.items.add(thresholdItem);
-
-    juce::FlexItem makeupItem(m_makeupGainDial);
-    makeupItem.withFlex(1.0f).withMargin(juce::FlexItem::Margin(10));
-    flexboxMiddle.items.add(makeupItem);
-
-    flexboxMiddle.performLayout(
-        juce::Rectangle<int>(middleRegionWidth, 0, dialSize, getHeight()));
-
-    // Right region - Range and Dry/Wet
-    juce::FlexBox flexboxRight;
-    flexboxRight.flexDirection = juce::FlexBox::Direction::column;
-    flexboxRight.justifyContent = juce::FlexBox::JustifyContent::flexStart;
-    flexboxRight.alignItems = juce::FlexBox::AlignItems::flexEnd;
-
-    juce::FlexItem rangeItem(m_rangeDial);
-    rangeItem.withFlex(1.0f).withMargin(juce::FlexItem::Margin(10, 10, 0, 10));
-    flexboxRight.items.add(rangeItem);
-
-    juce::FlexItem wetDryItem(m_wetDryDial);
-    wetDryItem.withFlex(1.0f).withMargin(juce::FlexItem::Margin(10, 10, 0, 10));
-    flexboxRight.items.add(wetDryItem);
-
-    flexboxRight.performLayout(
-        juce::Rectangle<int>(getWidth() - dialSize, 0, dialSize, getHeight()));
-
-    // Position text boxes above the parameter dials
-    const int textBoxWidth = dialSize;
-    const int textBoxHeight = 20;
-
-    m_attackDial.setTextBoxStyle(juce::Slider::TextBoxAbove, false, textBoxWidth, textBoxHeight);
-    m_releaseDial.setTextBoxStyle(juce::Slider::TextBoxAbove, false, textBoxWidth, textBoxHeight);
-    m_ratioDial.setTextBoxStyle(juce::Slider::TextBoxAbove, false, textBoxWidth, textBoxHeight);
-
-    // Set the bounds for each dial
-    m_attackDial.setBounds(m_attackDial.getX(), m_attackDial.getY(), dialSize, dialSize);
-    m_releaseDial.setBounds(m_releaseDial.getX(), m_releaseDial.getY(), dialSize, dialSize);
-    m_ratioDial.setBounds(m_ratioDial.getX(), m_ratioDial.getY(), dialSize, dialSize);
-    m_thresholdDial.setBounds(m_thresholdDial.getX(), m_thresholdDial.getY(), dialSize, dialSize);
-    m_makeupGainDial.setBounds(m_makeupGainDial.getX(), m_makeupGainDial.getY(), dialSize, dialSize);
-    m_rangeDial.setBounds(m_rangeDial.getX(), m_rangeDial.getY(), dialSize, dialSize);
-    m_wetDryDial.setBounds(m_wetDryDial.getX(), m_wetDryDial.getY(), dialSize, dialSize);
+    if ((index + 1) % 3 == 0)
+    {
+        x += dialWidth + padding;
+        y = margin;
+    }
+}
 }
 
+void MyCompressorEditor::setCommonSliderProperties(juce::Slider& slider)
+{
+    slider.setLookAndFeel(&m_lnf); // Set the look and feel for the slider
+    slider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
+    slider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    slider.setLookAndFeel(&m_lnf);
+    slider.addListener(this);
+}
 

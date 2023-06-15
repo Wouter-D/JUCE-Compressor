@@ -14,6 +14,34 @@
 //==============================================================================
 /**
 */
+
+class MyLookAndFeel : public juce::LookAndFeel_V4
+{
+public:
+    void drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos,
+        const float rotaryStartAngle, const float rotaryEndAngle, juce::Slider&) override
+    {
+        // Customize the appearance of the rotary slider
+        // You can use the Graphics object (g) to draw custom graphics
+
+        // Example code to draw a basic rotary slider
+        g.setColour(juce::Colours::grey);
+        g.fillEllipse(x, y, width, height);
+
+        g.setColour(juce::Colours::red);
+        float angle = rotaryStartAngle + (sliderPos * (rotaryEndAngle - rotaryStartAngle));
+
+        juce::Path trianglePath;
+        float triangleSize = std::min(width, height) * 0.4f;
+        trianglePath.addTriangle(juce::Point<float>(x + width / 2, y + height / 2),
+            juce::Point<float>(x + width / 2 + triangleSize / 2, y + height / 2),
+            juce::Point<float>(x + width / 2 + triangleSize / 2 * std::cos(angle),
+                y + height / 2 + triangleSize / 2 * std::sin(angle)));
+        g.fillPath(trianglePath);
+    }
+};
+
+
 class MyCompressorEditor : public juce::AudioProcessorEditor,
     public juce::Slider::Listener,
     public juce::Button::Listener
@@ -34,7 +62,7 @@ private:
     // access the processor object that created it.
 
     MyGlueCompressor& audioProcessor;
-
+    juce::LookAndFeel_V4 m_lnf;
     juce::ToggleButton m_softClippingToggle;
 
     juce::Slider m_inputDial;
