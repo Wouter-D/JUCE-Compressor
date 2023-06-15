@@ -2,6 +2,12 @@
 
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="NewProject\GUI\Sliders">
+      <UniqueIdentifier>{9514F4FB-EB86-0E99-423E-AF8FCFC3C819}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NewProject\GUI">
+      <UniqueIdentifier>{731478FF-C747-16D0-F659-57DF75548C9A}</UniqueIdentifier>
+    </Filter>
     <Filter Include="NewProject\Source">
       <UniqueIdentifier>{CBA2DCCD-1D2C-5CB2-5048-C7D8353D0443}</UniqueIdentifier>
     </Filter>
@@ -601,6 +607,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\GUI\Sliders\SliderProps.cpp">
+      <Filter>NewProject\GUI\Sliders</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\PluginProcessor.cpp">
       <Filter>NewProject\Source</Filter>
     </ClCompile>

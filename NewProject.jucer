@@ -3,6 +3,11 @@
 <JUCERPROJECT id="lX7s5A" name="NewProject" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
   <MAINGROUP id="DV60g9" name="NewProject">
+    <GROUP id="{518CD054-B6B1-AB5A-311F-A485FD19244A}" name="GUI">
+      <GROUP id="{4264C8C5-520E-DDB2-7BEA-4B17EF9C0E70}" name="Sliders">
+        <FILE id="wx5xlE" name="SliderProps.cpp" compile="1" resource="0" file="Source/GUI/Sliders/SliderProps.cpp"/>
+      </GROUP>
+    </GROUP>
     <GROUP id="{938BD651-6045-6781-0333-24E6E1FA9A3C}" name="Source">
       <FILE id="xCCTwm" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>

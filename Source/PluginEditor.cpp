@@ -13,6 +13,12 @@
 MyCompressorEditor::MyCompressorEditor(MyGlueCompressor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
 {
+    //Go tru each slider and call dial properties
+    for (size_t index = 0; index < m_dials.size(); index++)
+    {
+        setCommonSliderProperties(*m_dials[index]);
+    }
+
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     setSize(750,480);
