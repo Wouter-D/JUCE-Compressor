@@ -13,5 +13,7 @@
 void MyCompressorEditor::setCommonSliderProperties(juce::Slider& slider)
 {
     addAndMakeVisible(slider);
+    slider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    slider.setTextBoxStyle(juce::Slider::TextBoxAbove, false, 72, 36);
 
 }

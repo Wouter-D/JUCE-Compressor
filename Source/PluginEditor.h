@@ -36,18 +36,19 @@ private:
     MyGlueCompressor& audioProcessor;
 
     //juce::Slider m_inputSlider;
-    juce::Slider m_attackSlider;
-    juce::Slider m_releaseSlider;
-    juce::Slider m_ratioSlider;
-    juce::Slider m_threshSlider;
-    juce::Slider m_makeupGainSlider;
-    juce::Slider m_rangeSlider;
-    //juce::Slider m_outputSlider;
-    juce::Slider m_wetDrySlider;
+    //juce::Slider m_attackSlider;
+    //juce::Slider m_releaseSlider;
+    //juce::Slider m_ratioSlider;
+    //juce::Slider m_threshSlider;
+    //juce::Slider m_makeupGainSlider;
+    //juce::Slider m_rangeSlider;
+    ////juce::Slider m_outputSlider;
+    //juce::Slider m_wetDrySlider;
     juce::ToggleButton m_softClippingToggle;
 
     juce::Slider m_inputDial;
     juce::Slider m_attackDial;
+    juce::Slider m_releaseDial;
     juce::Slider m_ratioDial;
     juce::Slider m_thresholdDial;
     juce::Slider m_makeupGainDial;
@@ -58,6 +59,7 @@ private:
     {
         &m_inputDial, 
         &m_attackDial,
+        &m_releaseDial,
         &m_ratioDial,
         &m_thresholdDial,
         &m_makeupGainDial,

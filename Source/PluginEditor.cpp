@@ -23,42 +23,27 @@ MyCompressorEditor::MyCompressorEditor(MyGlueCompressor& p)
     // editor's size to whatever you need it to be.
     setSize(750,480);
     
-    
+    m_attackDial.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    m_attackDial.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    m_attackDial.setRange(1.0, 100.0);
+    m_attackDial.setValue(50.0);
 
-       /* m_attackSlider.setRange(1.0, 100.0);
-        m_attackSlider.addListener(this);
+    m_releaseDial.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    m_releaseDial.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    m_releaseDial.setRange(10.0, 1000.0);
+    m_releaseDial.setValue(500.0);
 
-        m_releaseSlider.setRange(10.0, 1000.0);
-        m_releaseSlider.addListener(this);
-
-        m_ratioSlider.setRange(1.0, 10.0);
-        m_ratioSlider.addListener(this);
-
-        m_threshSlider.setRange(-60.0, 0.0);
-        m_threshSlider.addListener(this);
-
-        m_makeupGainSlider.setRange( - 24.0, 24.0);
-        m_makeupGainSlider.addListener(this);
-
-        m_rangeSlider.setRange(1.0, 40.0);
-        m_rangeSlider.addListener(this);
-
-        m_wetDrySlider.setRange(0.0, 1.0);
-        m_wetDrySlider.addListener(this);
-
-        m_softClippingToggle.setButtonText("Soft Clipping");
-        m_softClippingToggle.addListener(this);*/
-
-        //Layout Logic goes here
-
-        //Layout logic end
-
-        //Setting initial values based on compressor's parameters
-
+    m_ratioDial.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    m_ratioDial.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    m_ratioDial.setRange(1.0, 10.0);
+    m_ratioDial.setValue(5.0);
 }
 
 MyCompressorEditor::~MyCompressorEditor()
 {
+    m_dials.clear();
+    //Shrinks to only the needed elements in the vector
+    m_dials.shrink_to_fit();
 }
 
 void MyCompressorEditor::sliderValueChanged(juce::Slider* slider)
@@ -87,6 +72,32 @@ void MyCompressorEditor::paint(juce::Graphics& g)
 
 void MyCompressorEditor::resized()
 {
-    // This is generally where you'll want to lay out the positions of any
-    // subcomponents in your editor..
+    // The FlexBox code you provided
+    auto dialSize = getWidth() * JUCE_LIVE_CONSTANT(0.1);
+
+    // First column - Attack - release - ratio
+    juce::FlexBox flexboxColumnOne;
+    flexboxColumnOne.flexDirection = juce::FlexBox::Direction::column;
+    flexboxColumnOne.justifyContent = juce::FlexBox::JustifyContent::flexStart;
+    flexboxColumnOne.alignItems = juce::FlexBox::AlignItems::flexStart;
+
+    juce::FlexItem attackItem(m_attackDial);
+    attackItem.withFlex(1.0f).withMargin(juce::FlexItem::Margin(0, 10, 10, 10));
+    flexboxColumnOne.items.add(attackItem);
+
+    juce::FlexItem releaseItem(m_releaseDial);
+    releaseItem.withFlex(1.0f).withMargin(juce::FlexItem::Margin(0, 10, 10, 10));
+    flexboxColumnOne.items.add(releaseItem);
+
+    juce::FlexItem ratioItem(m_ratioDial);
+    ratioItem.withFlex(1.0f).withMargin(juce::FlexItem::Margin(0, 10, 10, 10));
+    flexboxColumnOne.items.add(ratioItem);
+
+    // Perform layout
+    flexboxColumnOne.performLayout(getLocalBounds());
+
+    // Set the bounds for each slider within the FlexItems
+    m_attackDial.setBounds(m_attackDial.getX(), m_attackDial.getY(), m_attackDial.getWidth(), dialSize);
+    m_releaseDial.setBounds(m_releaseDial.getX(), m_releaseDial.getY(), m_releaseDial.getWidth(), dialSize);
+    m_ratioDial.setBounds(m_ratioDial.getX(), m_ratioDial.getY(), m_ratioDial.getWidth(), dialSize);
 }
