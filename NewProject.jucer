@@ -1,12 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="lX7s5A" name="NewProject" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
-  <MAINGROUP id="DV60g9" name="NewProject">
-    <GROUP id="{518CD054-B6B1-AB5A-311F-A485FD19244A}" name="GUI">
-      <GROUP id="{4264C8C5-520E-DDB2-7BEA-4B17EF9C0E70}" name="Sliders">
-        <FILE id="wx5xlE" name="SliderProps.cpp" compile="1" resource="0" file="Source/GUI/Sliders/SliderProps.cpp"/>
-      </GROUP>
+<JUCERPROJECT id="lX7s5A" name="1ISP24N_Wouter_Duprez_Compressor" projectType="audioplug"
+              useAppConfig="0" addUsingNamespaceToJuceHeader="0" displaySplashScreen="1"
+              jucerFormatVersion="1" pluginManufacturer="Wouter Duprez">
+  <MAINGROUP id="DV60g9" name="1ISP24N_Wouter_Duprez_Compressor">
+    <GROUP id="{1FB21443-8DD0-0A7A-7732-A0C152728071}" name="LibFiles">
+      <FILE id="fq4IhE" name="CompressionDSP.cpp" compile="1" resource="0"
+            file="Source/CompressionDSP.cpp"/>
+      <FILE id="FAEX8y" name="CompressionDSP.h" compile="0" resource="0"
+            file="Source/CompressionDSP.h"/>
+      <FILE id="su35tf" name="DialsLookandFeel.cpp" compile="1" resource="0"
+            file="Source/DialsLookandFeel.cpp"/>
+      <FILE id="ahedxj" name="DialsLookandFeel.h" compile="0" resource="0"
+            file="Source/DialsLookandFeel.h"/>
+      <FILE id="VbSpgV" name="GroupingProperties.cpp" compile="1" resource="0"
+            file="Source/GroupingProperties.cpp"/>
+      <FILE id="w4Uow9" name="GroupingProperties.h" compile="0" resource="0"
+            file="Source/GroupingProperties.h"/>
+      <FILE id="NO1W4W" name="LabelProperties.cpp" compile="1" resource="0"
+            file="Source/LabelProperties.cpp"/>
+      <FILE id="lhzHzK" name="LabelProperties.h" compile="0" resource="0"
+            file="Source/LabelProperties.h"/>
+      <FILE id="pVoH3V" name="ParameterProperties.cpp" compile="1" resource="0"
+            file="Source/ParameterProperties.cpp"/>
+      <FILE id="an65vP" name="ParameterProperties.h" compile="0" resource="0"
+            file="Source/ParameterProperties.h"/>
+      <FILE id="SstqBg" name="SliderProperties.cpp" compile="1" resource="0"
+            file="Source/SliderProperties.cpp"/>
+      <FILE id="cPr03w" name="SliderProperties.h" compile="0" resource="0"
+            file="Source/SliderProperties.h"/>
     </GROUP>
     <GROUP id="{938BD651-6045-6781-0333-24E6E1FA9A3C}" name="Source">
       <FILE id="xCCTwm" name="PluginProcessor.cpp" compile="1" resource="0"

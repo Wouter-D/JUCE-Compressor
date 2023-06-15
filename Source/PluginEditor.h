@@ -10,106 +10,92 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "DialsLookandFeel.h"
 
 //==============================================================================
 /**
 */
-
-class MyLookAndFeel : public juce::LookAndFeel_V4
-{
-public:
-    void drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos,
-        const float rotaryStartAngle, const float rotaryEndAngle, juce::Slider&) override
-    {
-        // Customize the appearance of the rotary slider
-        // You can use the Graphics object (g) to draw custom graphics
-
-        // Example code to draw a basic rotary slider
-        g.setColour(juce::Colours::grey);
-        g.fillEllipse(x, y, width, height);
-
-        g.setColour(juce::Colours::red);
-        float angle = rotaryStartAngle + (sliderPos * (rotaryEndAngle - rotaryStartAngle));
-
-        juce::Path trianglePath;
-        float triangleSize = std::min(width, height) * 0.4f;
-        trianglePath.addTriangle(juce::Point<float>(x + width / 2, y + height / 2),
-            juce::Point<float>(x + width / 2 + triangleSize / 2, y + height / 2),
-            juce::Point<float>(x + width / 2 + triangleSize / 2 * std::cos(angle),
-                y + height / 2 + triangleSize / 2 * std::sin(angle)));
-        g.fillPath(trianglePath);
-    }
-};
-
-
 class MyCompressorEditor : public juce::AudioProcessorEditor,
     public juce::Slider::Listener,
-    public juce::Button::Listener
-{
+    public juce::Button::Listener {
 public:
-    explicit MyCompressorEditor(MyGlueCompressor& p);
+    MyCompressorEditor(MyGlueCompressor& p);
     ~MyCompressorEditor() override;
 
     //==============================================================================
-    void sliderValueChanged(juce::Slider* slider);
-    void buttonClicked(juce::Button* button);
-    
     void paint(juce::Graphics&) override;
     void resized() override;
 
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
+    MyCompressorEditor& audioProcessor;
 
-    MyGlueCompressor& audioProcessor;
-    juce::LookAndFeel_V4 m_lnf;
-    juce::ToggleButton m_softClippingToggle;
+    juce::Slider inputDial;
+    juce::Slider threshDial;
+    juce::Slider ratioDial;
+    juce::Slider attackDial;
+    juce::Slider releaseDial;
+    juce::Slider limiterThreshDial;
+    juce::Slider limiterReleaseDial;
+    juce::Slider outputDial;
+    juce::Slider compMixDial;
 
-    juce::Slider m_inputDial;
-    juce::Slider m_attackDial;
-    juce::Slider m_releaseDial;
-    juce::Slider m_ratioDial;
-    juce::Slider m_thresholdDial;
-    juce::Slider m_makeupGainDial;
-    juce::Slider m_rangeDial;
-    juce::Slider m_outputDial;
-    juce::Slider m_wetDryDial;
+    DialStyle customDialLAF;
 
-    std::vector<juce::Slider*> m_dials =
+    std::vector<juce::Slider*> dials =
     {
-        &m_inputDial, 
-        &m_attackDial,
-        &m_releaseDial,
-        &m_ratioDial,
-        &m_thresholdDial,
-        &m_makeupGainDial,
-        &m_rangeDial,
-        &m_outputDial,
-        &m_wetDryDial
+        &inputDial, &threshDial, &ratioDial,
+        &attackDial, &releaseDial, &limiterThreshDial,
+        &limiterReleaseDial, &outputDial, &compMixDial
     };
+    juce::AudioProcessorValueTreeState treeState;
+
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> inputAttach;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> threshAttach;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> ratioAttach;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> attackAttach;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> releaseAttach;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> limiterThreshAttach;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> limiterReleaseAttach;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> outputAttach;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> compMixAttach;
+
+    void attachSliders();
 
     juce::Label inputDialLabel;
     juce::Label threshDialLabel;
     juce::Label ratioDialLabel;
     juce::Label attackDialLabel;
     juce::Label releaseDialLabel;
+    juce::Label limiterThreshDialLabel;
+    juce::Label limiterReleaseDialLabel;
     juce::Label outputDialLabel;
-    juce::Label rangeDialLabel;
-    juce::Label wetDryDialLabel;
-    
+    juce::Label compMixDialLabel;
+
     std::vector<juce::Label*> dialLabels =
     {
-        &inputDialLabel,
-        &threshDialLabel,
-        &ratioDialLabel,
-        &attackDialLabel,
-        &releaseDialLabel,
-        &outputDialLabel,
-        &rangeDialLabel,
-        &wetDryDialLabel
+        &inputDialLabel, &threshDialLabel, &ratioDialLabel,
+        &attackDialLabel, &releaseDialLabel, &limiterThreshDialLabel,
+        &limiterReleaseDialLabel, &outputDialLabel, &compMixDialLabel
     };
 
-    void setCommonSliderProperties(juce::Slider& slider); 
+    juce::GroupComponent ioGroup;
+    juce::GroupComponent compressorGroup;
+    juce::GroupComponent limiterGroup;
+
+    std::vector<juce::GroupComponent*> groups =
+    {
+        &ioGroup, &compressorGroup, &limiterGroup,
+    };
+
+    void setCommonSliderProps(juce::Slider& slider);
+    void setCommonLabelProps(juce::Label& label);
+    void setGroupProps(juce::GroupComponent& group);
+
+    /** Shadow */
+    juce::DropShadow shadowProperties;
+    juce::DropShadowEffect dialShadow;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MyCompressorEditor)
 };

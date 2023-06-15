@@ -2,14 +2,14 @@
 
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="NewProject\LibFiles">
-      <UniqueIdentifier>{5E51950D-EB8E-CB2F-3CBD-3929BACB6E02}</UniqueIdentifier>
+    <Filter Include="1ISP24N_Wouter_Duprez_Compressor\LibFiles">
+      <UniqueIdentifier>{D0144191-B4C4-0113-0DB2-9551832F43D4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="NewProject\Source">
-      <UniqueIdentifier>{CBA2DCCD-1D2C-5CB2-5048-C7D8353D0443}</UniqueIdentifier>
+    <Filter Include="1ISP24N_Wouter_Duprez_Compressor\Source">
+      <UniqueIdentifier>{09C022EB-51F5-DDC1-4A9D-A0013CC3E392}</UniqueIdentifier>
     </Filter>
-    <Filter Include="NewProject">
-      <UniqueIdentifier>{CB74BE48-DB7F-3C97-627C-DABC57896C4C}</UniqueIdentifier>
+    <Filter Include="1ISP24N_Wouter_Duprez_Compressor">
+      <UniqueIdentifier>{6D59CECB-B837-A357-98D9-6AA27E3F683D}</UniqueIdentifier>
     </Filter>
     <Filter Include="JUCE Modules\juce_audio_basics\audio_play_head">
       <UniqueIdentifier>{EB58F05A-A968-CEBE-40C4-107CDD8F240F}</UniqueIdentifier>
@@ -605,28 +605,28 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\CompressionDSP.cpp">
-      <Filter>NewProject\LibFiles</Filter>
+      <Filter>1ISP24N_Wouter_Duprez_Compressor\LibFiles</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\DialsLookandFeel.cpp">
-      <Filter>NewProject\LibFiles</Filter>
+      <Filter>1ISP24N_Wouter_Duprez_Compressor\LibFiles</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\GroupingProperties.cpp">
-      <Filter>NewProject\LibFiles</Filter>
+      <Filter>1ISP24N_Wouter_Duprez_Compressor\LibFiles</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\LabelProperties.cpp">
-      <Filter>NewProject\LibFiles</Filter>
+      <Filter>1ISP24N_Wouter_Duprez_Compressor\LibFiles</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\ParameterProperties.cpp">
-      <Filter>NewProject\LibFiles</Filter>
+      <Filter>1ISP24N_Wouter_Duprez_Compressor\LibFiles</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\SliderProperties.cpp">
-      <Filter>NewProject\LibFiles</Filter>
+      <Filter>1ISP24N_Wouter_Duprez_Compressor\LibFiles</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\PluginProcessor.cpp">
-      <Filter>NewProject\Source</Filter>
+      <Filter>1ISP24N_Wouter_Duprez_Compressor\Source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\PluginEditor.cpp">
-      <Filter>NewProject\Source</Filter>
+      <Filter>1ISP24N_Wouter_Duprez_Compressor\Source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\JUCE\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.cpp">
       <Filter>JUCE Modules\juce_audio_basics\audio_play_head</Filter>
@@ -3067,28 +3067,28 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Source\CompressionDSP.h">
-      <Filter>NewProject\LibFiles</Filter>
+      <Filter>1ISP24N_Wouter_Duprez_Compressor\LibFiles</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\DialsLookandFeel.h">
-      <Filter>NewProject\LibFiles</Filter>
+      <Filter>1ISP24N_Wouter_Duprez_Compressor\LibFiles</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\GroupingProperties.h">
-      <Filter>NewProject\LibFiles</Filter>
+      <Filter>1ISP24N_Wouter_Duprez_Compressor\LibFiles</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\LabelProperties.h">
-      <Filter>NewProject\LibFiles</Filter>
+      <Filter>1ISP24N_Wouter_Duprez_Compressor\LibFiles</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\ParameterProperties.h">
-      <Filter>NewProject\LibFiles</Filter>
+      <Filter>1ISP24N_Wouter_Duprez_Compressor\LibFiles</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\SliderProperties.h">
-      <Filter>NewProject\LibFiles</Filter>
+      <Filter>1ISP24N_Wouter_Duprez_Compressor\LibFiles</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\PluginProcessor.h">
-      <Filter>NewProject\Source</Filter>
+      <Filter>1ISP24N_Wouter_Duprez_Compressor\Source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\PluginEditor.h">
-      <Filter>NewProject\Source</Filter>
+      <Filter>1ISP24N_Wouter_Duprez_Compressor\Source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\JUCE\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.h">
       <Filter>JUCE Modules\juce_audio_basics\audio_play_head</Filter>

@@ -15,9 +15,9 @@ BEGIN
   BEGIN
     BLOCK "040904E4"
     BEGIN
-      VALUE "FileDescription",  "NewProject\0"
+      VALUE "FileDescription",  "1ISP24N_Wouter_Duprez_Compressor\0"
       VALUE "FileVersion",  "1.0.0\0"
-      VALUE "ProductName",  "NewProject\0"
+      VALUE "ProductName",  "1ISP24N_Wouter_Duprez_Compressor\0"
       VALUE "ProductVersion",  "1.0.0\0"
     END
   END

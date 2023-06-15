@@ -1,0 +1,38 @@
+/*
+  ==============================================================================
+
+    ParameterProperties.cpp
+    Created: 15 Jun 2023 8:24:53pm
+    Author:  woute
+
+  ==============================================================================
+*/
+
+#include "ParameterProperties.h"
+
+const juce::String inputID = "input";
+const juce::String inputName = "Input";
+
+const juce::String threshID = "thresh";
+const juce::String threshName = "Thresh";
+
+const juce::String ratioID = "ratio";
+const juce::String ratioName = "Ratio";
+
+const juce::String attackID = "attack";
+const juce::String attackName = "Attack";
+
+const juce::String releaseID = "release";
+const juce::String releaseName = "Release";
+
+const juce::String LThreshID = "lThresh";
+const juce::String LThreshName = "Limiter Thresh";
+
+const juce::String LReleaseID = "lRelease";
+const juce::String LReleaseName = "Limiter Release";
+
+const juce::String outputID = "output";
+const juce::String outputName = "Output";
+
+const juce::String compMixID = "compMix";
+const juce::String compMixName = "Compressor Mix";

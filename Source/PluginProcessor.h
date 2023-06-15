@@ -9,38 +9,103 @@
 #pragma once
 
 #include <JuceHeader.h>
-
+#include "ParameterProperties.h"
 //==============================================================================
 /**
 */
-class EnvelopeFollower
+class LVCompressor
 {
 public:
-    void reset()
-    {
-        envelope_ = 0.0f;
-    }
 
-    void process(const float* buffer, int numSamples)
+    LVCompressor();
+
+    void prepare(juce::dsp::ProcessSpec& spec) noexcept;
+
+    void process(juce::AudioBuffer<float>& buffer)
     {
-        for (int i = 0; i < numSamples; ++i)
+        auto data = buffer.getArrayOfWritePointers();
+
+        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
-            float absoluteSample = std::abs(buffer[i]);
-            if (absoluteSample > envelope_)
-                envelope_ = absoluteSample;
-            else
-                envelope_ *= 0.99f; // Decay the envelope over time
+            for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
+            {
+                {
+                    data[ch][sample] = processSample(data[ch][sample]);
+                }
+            }
         }
     }
 
-    float getEnvelope() const
+    float processSample(float input)
     {
-        return envelope_;
+        /* Initialise separate attack/release times*/
+        auto alphaAttack = std::exp((std::log(9) * -1.0) / (_samplerate * _attack));
+        auto alphaRelease = std::exp((std::log(9) * -1.0) / (_samplerate * _release));
+
+        const auto x = input;
+
+        auto x_Uni = abs(x);
+        auto x_dB = juce::Decibels::gainToDecibels(x_Uni);
+
+        if (x_dB < -96.0)
+        {
+            x_dB = -96.0;
+        }
+
+        if (x_dB > _thresh)
+        {
+            gainSC = _thresh + (x_dB - _thresh) / _ratio;
+        }
+
+        else
+        {
+            gainSC = x_dB;
+        }
+
+        gainChange_dB = gainSC - x_dB;
+
+        if (gainChange_dB < gainSmoothPrevious)
+        {
+            gainSmooth = ((1 - alphaAttack) * gainChange_dB) + (alphaAttack * gainSmoothPrevious);
+            currentSignal = gainSmooth;
+        }
+
+        else
+        {
+            gainSmooth = ((1 - alphaRelease) * gainChange_dB) + (alphaRelease * gainSmoothPrevious);
+            currentSignal = gainSmooth;
+        }
+
+        gainSmoothPrevious = gainSmooth;
+
+        auto mix = (1.0 - _mix.getNextValue()) * x + (x * juce::Decibels::decibelsToGain(gainSmooth)) * _mix.getNextValue();
+
+        return mix;
     }
 
+    void setThreshold(float newThresh);
+    void setRatio(float newRatio);
+    void setAttack(float newAttack);
+    void setRelease(float newRelease);
+    void setMix(float newMix);
+
 private:
-    float envelope_ = 0.0f;
+
+    float _thresh;
+    float _ratio;
+    float _attack;
+    float _release;
+
+    juce::SmoothedValue<float> _mix;
+
+    float _samplerate = 44100.f;
+    float gainSC = 0.0f;
+    float gainSmooth = 0.0f;
+    float gainSmoothPrevious = 0.0f;
+    float currentSignal = 0.0f;
+    float gainChange_dB = 0.0f;
 };
+
 
 class MyGlueCompressor : public juce::AudioProcessor, public juce::AudioProcessorValueTreeState::Listener
 #if JucePlugin_Enable_ARA
@@ -51,24 +116,16 @@ public:
     //==============================================================================
     MyGlueCompressor();
     ~MyGlueCompressor() override;
+
     //==============================================================================
-    void prepareToPlay (double sampleRate, int samplesPerBlock) override;
+    void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
 
-   #ifndef JucePlugin_PreferredChannelConfigurations
-    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
-   #endif
+#ifndef JucePlugin_PreferredChannelConfigurations
+    bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
+#endif
 
-    void setAttackTime(float attackTime);
-    void setReleaseTime(float releaseTime);
-    void setRatio(float ratio);
-    void setThreshold(float Threshold);
-    void setMakeupGain(float makeupGain);
-    void setRange(float range);
-    void setDryWet(float dryWet);
-    void setSoftClippingEnabled(bool enabled);
-
-    void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+    void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
     //==============================================================================
     juce::AudioProcessorEditor* createEditor() override;
@@ -85,58 +142,32 @@ public:
     //==============================================================================
     int getNumPrograms() override;
     int getCurrentProgram() override;
-    void setCurrentProgram (int index) override;
-    const juce::String getProgramName (int index) override;
-    void changeProgramName (int index, const juce::String& newName) override;
+    void setCurrentProgram(int index) override;
+    const juce::String getProgramName(int index) override;
+    void changeProgramName(int index, const juce::String& newName) override;
 
     //==============================================================================
-    void getStateInformation (juce::MemoryBlock& destData) override;
-    void setStateInformation (const void* data, int sizeInBytes) override;
+    void getStateInformation(juce::MemoryBlock& destData) override;
+    void setStateInformation(const void* data, int sizeInBytes) override;
 
-    // Added stuff
 
-    using APVTS = juce::AudioProcessorValueTreeState;
-    APVTS m_treeState;
-    static APVTS::ParameterLayout createParameterLayout();
-    //APVTS apvts{ *this, nullptr, "Parameters", createParameterLayout() };
-
+    juce::AudioProcessorValueTreeState treeState;
 private:
-    void updateParameters();
-    float applyCompression(float input);
+
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     void parameterChanged(const juce::String& parameterID, float newValue) override;
-    juce::dsp::Gain<float> m_inputModule;
-    juce::dsp::Gain<float> m_outputModule;
-    juce::dsp::Gain<float> m_gainProcessor;
-    juce::dsp::Compressor <float> m_compressorModule; 
-    juce::dsp::ProcessSpec m_spec;
-    juce::AudioBuffer<float> m_outputBuffer;  // Output buffer
-    juce::SmoothedValue<float> m_inputSoftClipping;
 
-    //Parameters
-    float m_attackTime;
-    float m_releaseTime;
-    float m_ratio;
-    float m_threshold;
-    float m_makeupGain;
-    float m_range;
-    float m_dryWet;
-    bool m_softClippingEnabled;
+    juce::dsp::Gain<float> inputModule;
+    juce::dsp::Gain<float> outputModule;
+    juce::dsp::Compressor<float> compressorModule;
+    juce::dsp::Bias<float> biasModule;
+    juce::dsp::Bias<float> postBiasModule;
+    juce::dsp::LinkwitzRileyFilter<float> hpFilterModule;
+    juce::dsp::Limiter<float> limiterModule;
 
-    EnvelopeFollower m_envelopeFollower;
+    LVCompressor lvCompressorModule;
 
-    float m_wetLevel;  // Wet level in decibels
-    float m_dryLevel;  // Dry level in decibels
-
-    float m_wetGain = 0.5f;
-    float m_dryGain = 0.5f;
-
-    
+    void updateParameters();
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MyGlueCompressor)
-
-
-
 };
-
-
-// check https://www.youtube.com/watch?v=NOYk7O9EJjo for tutorial-
