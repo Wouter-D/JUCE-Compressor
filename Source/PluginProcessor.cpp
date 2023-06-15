@@ -249,6 +249,30 @@ bool MyGlueCompressor::isBusesLayoutSupported (const BusesLayout& layouts) const
     return true;
   #endif
 }
+void MyGlueCompressor::setAttackTime(float attackTime)
+{
+}
+void MyGlueCompressor::setReleaseTime(float releaseTime)
+{
+}
+void MyGlueCompressor::setRatio(float ratio)
+{
+}
+void MyGlueCompressor::setThreshold(float Threshold)
+{
+}
+void MyGlueCompressor::setMakeupGain(float makeupGain)
+{
+}
+void MyGlueCompressor::setRange(float range)
+{
+}
+void MyGlueCompressor::setDryWet(float dryWet)
+{
+}
+void MyGlueCompressor::setSoftClippingEnabled(bool enabled)
+{
+}
 #endif
 
 void MyGlueCompressor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)

@@ -10,10 +10,38 @@
 
 #include <JuceHeader.h>
 
-
 //==============================================================================
 /**
 */
+class EnvelopeFollower
+{
+public:
+    void reset()
+    {
+        envelope_ = 0.0f;
+    }
+
+    void process(const float* buffer, int numSamples)
+    {
+        for (int i = 0; i < numSamples; ++i)
+        {
+            float absoluteSample = std::abs(buffer[i]);
+            if (absoluteSample > envelope_)
+                envelope_ = absoluteSample;
+            else
+                envelope_ *= 0.99f; // Decay the envelope over time
+        }
+    }
+
+    float getEnvelope() const
+    {
+        return envelope_;
+    }
+
+private:
+    float envelope_ = 0.0f;
+};
+
 class MyGlueCompressor : public juce::AudioProcessor, public juce::AudioProcessorValueTreeState::Listener
 #if JucePlugin_Enable_ARA
     , public juce::AudioProcessorARAExtension
@@ -23,7 +51,6 @@ public:
     //==============================================================================
     MyGlueCompressor();
     ~MyGlueCompressor() override;
-  
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
@@ -31,6 +58,15 @@ public:
    #ifndef JucePlugin_PreferredChannelConfigurations
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
    #endif
+
+    void setAttackTime(float attackTime);
+    void setReleaseTime(float releaseTime);
+    void setRatio(float ratio);
+    void setThreshold(float Threshold);
+    void setMakeupGain(float makeupGain);
+    void setRange(float range);
+    void setDryWet(float dryWet);
+    void setSoftClippingEnabled(bool enabled);
 
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
@@ -75,6 +111,19 @@ private:
     juce::dsp::Compressor <float> m_compressorModule; 
     juce::AudioBuffer<float> m_outputBuffer;  // Output buffer
     juce::SmoothedValue<float> m_inputSoftClipping;
+
+    //Parameters
+    float m_attackTime{0.0f};
+    float m_releaseTime{ 0.0f };
+    float m_ratio{ 0.0f };
+    float m_Threshold{ 0.0f };
+    float m_makeupGain{ 0.0f };
+    float m_range{ 0.0f };
+    float m_dryWet{ 0.0f };
+    bool m_softClippingEnabled{false};
+
+    EnvelopeFollower m_envelopeFollower;
+
     float m_wetLevel;  // Wet level in decibels
     float m_dryLevel;  // Dry level in decibels
 

@@ -35,14 +35,14 @@ private:
 
     MyGlueCompressor& audioProcessor;
 
-    juce::Slider m_inputSlider;
+    //juce::Slider m_inputSlider;
     juce::Slider m_attackSlider;
     juce::Slider m_releaseSlider;
     juce::Slider m_ratioSlider;
     juce::Slider m_threshSlider;
     juce::Slider m_makeupGainSlider;
     juce::Slider m_rangeSlider;
-    juce::Slider m_outputSlider;
+    //juce::Slider m_outputSlider;
     juce::Slider m_wetDrySlider;
     juce::ToggleButton m_softClippingToggle;
 

@@ -41,6 +41,12 @@ MyCompressorEditor::MyCompressorEditor(MyGlueCompressor& p)
         m_softClippingToggle.setButtonText("Soft Clipping");
         m_softClippingToggle.addListener(this);
 
+        //Layout Logic goes here
+
+        //Layout logic end
+
+        //Setting initial values based on compressor's parameters
+
 }
 
 MyCompressorEditor::~MyCompressorEditor()
