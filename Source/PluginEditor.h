@@ -17,7 +17,7 @@
 class MyCompressorEditor : public juce::AudioProcessorEditor
 {
 public:
-    MyCompressorEditor(MyCompressorEditor&);
+    MyCompressorEditor(MyGlueCompressor&);
     ~MyCompressorEditor() override;
 
     //==============================================================================
@@ -27,7 +27,7 @@ public:
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
-    MyCompressorEditor& audioProcessor;
+    MyGlueCompressor& audioProcessor;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MyCompressorEditor)
 };

@@ -315,6 +315,7 @@ void MyGlueCompressor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
+
 }
 
 
@@ -326,9 +327,8 @@ bool MyGlueCompressor::hasEditor() const
 
 juce::AudioProcessorEditor* MyGlueCompressor::createEditor()
 {
-    //return new MyParallelCompressor (*this);
-
-    return new juce::GenericAudioProcessorEditor(*this);
+    //return new juce::GenericAudioProcessorEditor(*this);
+    return new juce::AudioProcessorEditor(*this);
 }
 
 //==============================================================================

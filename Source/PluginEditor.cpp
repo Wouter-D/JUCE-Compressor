@@ -10,7 +10,7 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-MyCompressorEditor::MyCompressorEditor(MyCompressorEditor& p)
+MyCompressorEditor::MyCompressorEditor(MyGlueCompressor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
 {
     // Make sure that before the constructor has finished, you've set the
