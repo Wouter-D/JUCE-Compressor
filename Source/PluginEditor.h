@@ -35,15 +35,6 @@ private:
 
     MyGlueCompressor& audioProcessor;
 
-    //juce::Slider m_inputSlider;
-    //juce::Slider m_attackSlider;
-    //juce::Slider m_releaseSlider;
-    //juce::Slider m_ratioSlider;
-    //juce::Slider m_threshSlider;
-    //juce::Slider m_makeupGainSlider;
-    //juce::Slider m_rangeSlider;
-    ////juce::Slider m_outputSlider;
-    //juce::Slider m_wetDrySlider;
     juce::ToggleButton m_softClippingToggle;
 
     juce::Slider m_inputDial;
@@ -54,6 +45,7 @@ private:
     juce::Slider m_makeupGainDial;
     juce::Slider m_rangeDial;
     juce::Slider m_outputDial;
+    juce::Slider m_wetDryDial;
 
     std::vector<juce::Slider*> m_dials =
     {
@@ -64,7 +56,29 @@ private:
         &m_thresholdDial,
         &m_makeupGainDial,
         &m_rangeDial,
-        &m_outputDial
+        &m_outputDial,
+        &m_wetDryDial
+    };
+
+    juce::Label inputDialLabel;
+    juce::Label threshDialLabel;
+    juce::Label ratioDialLabel;
+    juce::Label attackDialLabel;
+    juce::Label releaseDialLabel;
+    juce::Label outputDialLabel;
+    juce::Label rangeDialLabel;
+    juce::Label wetDryDialLabel;
+    
+    std::vector<juce::Label*> dialLabels =
+    {
+        &inputDialLabel,
+        &threshDialLabel,
+        &ratioDialLabel,
+        &attackDialLabel,
+        &releaseDialLabel,
+        &outputDialLabel,
+        &rangeDialLabel,
+        &wetDryDialLabel
     };
 
     void setCommonSliderProperties(juce::Slider& slider); 
